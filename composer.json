@@ -19,7 +19,8 @@
         "guzzlehttp/guzzle": "^7.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^6.0 || ^7.0 || ^8.0 || ^9.3 || ^10.0.7"
+        "phpunit/phpunit": "^6.0 || ^7.0 || ^8.0 || ^9.3 || ^10.0.7",
+        "php-http/mock-client": "^1.5"
     },
     "autoload": {
         "psr-4": {
@@ -34,6 +35,11 @@
     "extra": {
         "branch-alias": {
             "dev-main": "1.0.x-dev"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false
         }
     }
 }
