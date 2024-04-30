@@ -51,6 +51,9 @@ class ClientRequestTest extends TestCase
         $this->assertEquals(['name' => 'bar'], $bodyJson['params']);
     }
 
+    /**
+     * @depends testInvoke
+     */
     public function testInvokeRpc(): void
     {
         $httpResponse = new Response(200, [], '{"jsonrpc":"2.0","result":"success"}');
@@ -152,5 +155,49 @@ class ClientRequestTest extends TestCase
         $this->assertFalse(empty($bodyJson[0]['id']));
         $this->assertSame('method-foo', $bodyJson[0]['method']);
         $this->assertEquals(['name' => 'foo'], $bodyJson[0]['params']);
+    }
+
+    /**
+     * @depends testInvoke
+     */
+    public function testMagicCall(): void
+    {
+        $httpResponse = new Response(200, [], '{"jsonrpc":"2.0","result":"success"}');
+
+        $this->httpClient->addResponse($httpResponse);
+
+        $result = $this->rpcClient->foo(['name' => 'bar']);
+
+        $this->assertSame('success', $result);
+
+        $lastRequest = $this->httpClient->getLastRequest();
+        $bodyJson = json_decode($lastRequest->getBody()->__toString(), true);
+
+        $this->assertSame('foo', $bodyJson['method']);
+        $this->assertEquals(['name' => 'bar'], $bodyJson['params']);
+    }
+
+    /**
+     * @depends testMagicCall
+     */
+    public function testMagicCallNamedArguments(): void
+    {
+        if (version_compare(PHP_VERSION_ID, '8.0.0', '<')) {
+            $this->markTestSkipped('PHP version >= 8.0.0 required.');
+        }
+
+        $httpResponse = new Response(200, [], '{"jsonrpc":"2.0","result":"success"}');
+
+        $this->httpClient->addResponse($httpResponse);
+
+        $result = $this->rpcClient->foo(name: 'bar');
+
+        $this->assertSame('success', $result);
+
+        $lastRequest = $this->httpClient->getLastRequest();
+        $bodyJson = json_decode($lastRequest->getBody()->__toString(), true);
+
+        $this->assertSame('foo', $bodyJson['method']);
+        $this->assertEquals(['name' => 'bar'], $bodyJson['params']);
     }
 }

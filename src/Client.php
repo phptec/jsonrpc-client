@@ -4,7 +4,6 @@ namespace PhpTec\JsonRpc\Client;
 
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 
 /**
@@ -29,7 +28,7 @@ class Client
     private $httpStreamFactory;
 
     /**
-     * @var string API endpoint URI.
+     * @var string JSON-RPC API endpoint URI.
      */
     private $endpointUri;
 
@@ -39,18 +38,37 @@ class Client
      */
     private $jsonEncodeOptions = 0;
 
+    /**
+     * Constructor.
+     *
+     * @param string $endpointUri JSON-RPC API endpoint URI.
+     */
     public function __construct(string $endpointUri)
     {
         $this->endpointUri = $endpointUri;
     }
 
-    public function invoke(string $name, array $params, ?string $id = null)
+    /**
+     * Invokes the remote method, returning its execution result.
+     *
+     * @param string $name remote method (procedure) name.
+     * @param array<string, mixed> remote method (procedure) parameters (arguments).
+     * @param int|string|null request ID.
+     * @return mixed the invocation result.
+     */
+    public function invoke(string $name, array $params, $id = null)
     {
         $rpc = new Rpc($name, $params, $id);
 
         return $this->invokeRpc($rpc);
     }
 
+    /**
+     * Invokes the remote method, returning its execution result.
+     *
+     * @param \PhpTec\JsonRpc\Client\Rpc $rpc RPC DTO.
+     * @return mixed the invocation result.
+     */
     public function invokeRpc(Rpc $rpc)
     {
         $responseData = $this->sendHttpRequest($this->rpc2array($rpc));
@@ -62,6 +80,12 @@ class Client
         return $responseData['result'];
     }
 
+    /**
+     * Invokes the batch of remote methods via single HTTP request.
+     *
+     * @param array<string, \PhpTec\JsonRpc\Client\Rpc|array<string, array>> $rpcs RPC specification indexed by request ID.
+     * @return array<string, mixed> the invocation results indexed by request ID.
+     */
     public function invokeBatch(array $rpcs): array
     {
         if (empty($rpcs)) {
@@ -186,6 +210,10 @@ class Client
         return $responseData;
     }
 
+    /**
+     * @param \PhpTec\JsonRpc\Client\Rpc $rpc RPC DTO.
+     * @return array RPC structured data.
+     */
     protected function rpc2array(Rpc $rpc): array
     {
         return [
@@ -196,14 +224,22 @@ class Client
         ];
     }
 
+    /**
+     * @param mixed $data data to be encoded.
+     * @return string JSON string.
+     */
     protected function jsonEncode($data): string
     {
         return json_encode($data, $this->jsonEncodeOptions);
     }
 
-    protected function jsonDecode(string $data): array
+    /**
+     * @param string $json JSON string.
+     * @return array decoded data.
+     */
+    protected function jsonDecode(string $json): array
     {
-        $result = json_decode($data, true);
+        $result = json_decode($json, true);
 
         $errorCode = json_last_error();
         if ($errorCode !== JSON_ERROR_NONE) {
@@ -211,5 +247,31 @@ class Client
         }
 
         return $result;
+    }
+
+    /**
+     * Calls the named method which is not a class method.
+     * Do not call this method. This is a PHP magic method that we override to implement direct RPC invocation.
+     *
+     * @param string $method method name.
+     * @param array $arguments method arguments.
+     * @return mixed invocation result.
+     */
+    public function __call(string $method, array $arguments)
+    {
+        $params = [];
+        $id = null;
+        if (!empty($arguments)) {
+            if (isset($arguments[0])) {
+                // traditional arguments
+                $params = $arguments[0];
+                $id = $arguments[1] ?? null;
+            } else {
+                // named arguments, require PHP >= 8.0
+                $params = $arguments;
+            }
+        }
+
+        return $this->invoke($method, $params, $id);
     }
 }
