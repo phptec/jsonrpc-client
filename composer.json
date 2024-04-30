@@ -1,0 +1,39 @@
+{
+    "name": "phptec/jsonrpc-client",
+    "description": "PHP JSON-RPC Client",
+    "keywords": ["php", "json", "rpc", "client", "api"],
+    "license": "BSD-3-Clause",
+    "support": {
+        "issues": "https://github.com/phptec/jsonrpc-client/issues",
+        "wiki": "https://github.com/phptec/jsonrpc-client/wiki",
+        "source": "https://github.com/phptec/jsonrpc-client"
+    },
+    "authors": [
+        {
+            "name": "Paul Klimov",
+            "email": "klimov.paul@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.2",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.0 || ^7.0 || ^8.0 || ^9.3 || ^10.0.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhpTec\\JsonRpc\\Client\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpTec\\JsonRpc\\Client\\Test\\": "tests"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        }
+    }
+}
