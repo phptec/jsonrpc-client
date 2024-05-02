@@ -249,4 +249,26 @@ PHP
         $this->assertSame('foo', $logger->logs[0]['context']['request']['method']);
         $this->assertSame('success', $logger->logs[0]['context']['response']['result']);
     }
+
+    /**
+     * @depends testInvoke
+     */
+    public function testMethodPrefix(): void
+    {
+        $httpResponse = new Response(200, [], '{"jsonrpc":"2.0","result":"success"}');
+
+        $this->httpClient->addResponse($httpResponse);
+
+        $this->rpcClient->setMethodPrefix('prefix.');
+
+        $result = $this->rpcClient->invoke('foo', ['name' => 'bar']);
+
+        $this->assertSame('success', $result);
+
+        $lastRequest = $this->httpClient->getLastRequest();
+
+        $bodyJson = json_decode($lastRequest->getBody()->__toString(), true);
+
+        $this->assertSame('prefix.foo', $bodyJson['method']);
+    }
 }

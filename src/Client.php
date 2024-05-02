@@ -46,10 +46,26 @@ class Client
     private $endpointUri;
 
     /**
+     * @var string|null value, which should be passed as HTTP header 'User-Agent' per each request.
+     */
+    private $userAgent;
+
+    /**
+     * @var string prefix, which should be automatically added for the method name in RPC request.
+     */
+    private $methodPrefix = '';
+
+    /**
      * @var int JSON encode options (flags).
      * @see https://www.php.net/manual/en/function.json-encode
      */
     private $jsonEncodeOptions = 0;
+
+    /**
+     * @var int JSON decode options (flags).
+     * @see https://www.php.net/manual/en/function.json-decode
+     */
+    private $jsonDecodeOptions = 0;
 
     /**
      * Constructor.
@@ -143,6 +159,12 @@ class Client
         return $results;
     }
 
+    /**
+     * Sets up the HTTP client to be used for request sending.
+     *
+     * @param \Psr\Http\Client\ClientInterface $httpClient HTTP client to be used.
+     * @return static self reference.
+     */
     public function setHttpClient(ClientInterface $httpClient): self
     {
         $this->httpClient = $httpClient;
@@ -150,6 +172,9 @@ class Client
         return $this;
     }
 
+    /**
+     * @return \Psr\Http\Client\ClientInterface HTTP client being used.
+     */
     public function getHttpClient(): ClientInterface
     {
         if ($this->httpClient === null) {
@@ -159,6 +184,11 @@ class Client
         return $this->httpClient;
     }
 
+    /**
+     * Creates default instance for the HTTP client.
+     *
+     * @return \Psr\Http\Client\ClientInterface HTTP client instance.
+     */
     protected function defaultHttpClient(): ClientInterface
     {
         return new \GuzzleHttp\Client([]);
@@ -253,6 +283,126 @@ class Client
     }
 
     /**
+     * Sets the JSON-RPC API endpoint URI.
+     * For example: 'https://example.test/json-rpc'
+     *
+     * @param string $endpointUri JSON-RPC API endpoint URI.
+     * @return static self reference.
+     */
+    public function setEndpointUri(string $endpointUri): self
+    {
+        $this->endpointUri = $endpointUri;
+
+        return $this;
+    }
+
+    /**
+     * @return string JSON-RPC API endpoint URI.
+     */
+    public function getEndpointUri(): string
+    {
+        return $this->endpointUri;
+    }
+
+    /**
+     * Sets the value, which should be passed as HTTP header 'User-Agent' per each request.
+     *
+     * > Note: particular HTTP client may set its own value of 'User-Agent' regardless of this option.
+     *
+     * @param string|null $userAgent HTTP user agent, `null` means set no header.
+     * @return static self reference.
+     */
+    public function setUserAgent(?string $userAgent): self
+    {
+        $this->userAgent = $userAgent;
+
+        return $this;
+    }
+
+    /**
+     * Returns HTTP user agent.
+     *
+     * @return string|null HTTP user agent.
+     */
+    public function getUserAgent(): ?string
+    {
+        return $this->userAgent;
+    }
+
+    /**
+     * Sets the prefix, which should be automatically added for the method name in RPC request.
+     *
+     * @param string $prefix method name prefix.
+     * @return static self reference.
+     */
+    public function setMethodPrefix(string $prefix): self
+    {
+        $this->methodPrefix = $prefix;
+
+        return $this;
+    }
+
+    /**
+     * Returns the prefix, which should be automatically added for the method name in RPC request.
+     *
+     * @return string method name prefix.
+     */
+    public function getMethodPrefix(): string
+    {
+        return $this->methodPrefix;
+    }
+
+    /**
+     * Sets JSON encode options (flags).
+     * @see https://www.php.net/manual/en/function.json-encode
+     *
+     * @param int $jsonEncodeOptions JSON encode options (flags).
+     * @return static self reference.
+     */
+    public function setJsonEncodeOptions(int $jsonEncodeOptions): self
+    {
+        $this->jsonEncodeOptions = $jsonEncodeOptions;
+
+        return $this;
+    }
+
+    /**
+     * Returns JSON encode options (flags).
+     * @see https://www.php.net/manual/en/function.json-encode
+     *
+     * @return int JSON encode options (flags).
+     */
+    public function getJsonEncodeOptions(): int
+    {
+        return $this->jsonEncodeOptions;
+    }
+
+    /**
+     * Sets JSON decode options (flags).
+     * @see https://www.php.net/manual/en/function.json-decode
+     *
+     * @param int $jsonDecodeOptions JSON decode options (flags).
+     * @return static self reference.
+     */
+    public function setJsonDecodeOptions(int $jsonDecodeOptions): self
+    {
+        $this->jsonDecodeOptions = $jsonDecodeOptions;
+
+        return $this;
+    }
+
+    /**
+     * Returns JSON decode options (flags).
+     * @see https://www.php.net/manual/en/function.json-decode
+     *
+     * @return int JSON decode options (flags).
+     */
+    public function getJsonDecodeOptions(): int
+    {
+        return $this->jsonDecodeOptions;
+    }
+
+    /**
      * Creates new HTTP request with given data.
      *
      * @param array $requestData request data.
@@ -267,6 +417,10 @@ class Client
             ->createRequest('POST', $this->endpointUri)
             ->withHeader('Content-Type', 'application/json')
             ->withBody($body);
+
+        if (($userAgent = $this->getUserAgent()) !== null) {
+            $httpRequest = $httpRequest->withHeader('User-Agent', $userAgent);
+        }
 
         if (($authentication = $this->getAuthentication()) !== null) {
             $httpRequest = $authentication->authenticate($httpRequest);
@@ -294,6 +448,7 @@ class Client
             if (($logger = $this->getLogger()) !== null) {
                 $logger->error($exception->getMessage(), [
                     'exception' => $exception,
+                    'uri' => $this->endpointUri,
                     'request' => $requestData,
                 ]);
             }
@@ -303,6 +458,7 @@ class Client
 
         if (($logger = $this->getLogger()) !== null) {
             $logger->debug('JSON-RPC Client Request', [
+                'uri' => $this->endpointUri,
                 'request' => $requestData,
                 'response' => $responseData,
             ]);
@@ -320,7 +476,7 @@ class Client
         return [
             'jsonrpc' => '2.0',
             'id' => $rpc->getId() ?? 1,
-            'method' => $rpc->getMethod(),
+            'method' => $this->getMethodPrefix() . $rpc->getMethod(),
             'params' => $rpc->getParams(),
         ];
     }
@@ -331,7 +487,7 @@ class Client
      */
     protected function jsonEncode($data): string
     {
-        return json_encode($data, $this->jsonEncodeOptions);
+        return json_encode($data, $this->getJsonEncodeOptions());
     }
 
     /**
@@ -340,7 +496,7 @@ class Client
      */
     protected function jsonDecode(string $json): array
     {
-        $result = json_decode($json, true);
+        $result = json_decode($json, true, 512, $this->getJsonDecodeOptions());
 
         $errorCode = json_last_error();
         if ($errorCode !== JSON_ERROR_NONE) {
@@ -374,5 +530,27 @@ class Client
         }
 
         return $this->invoke($method, $params, $id);
+    }
+
+    /**
+     * Clones this object.
+     * This method can be useful in creation of the invocation chain, providing syntax sugar.
+     *
+     * @return static cloned instance of self.
+     */
+    public function clone(): self
+    {
+        return clone $this;
+    }
+
+    /**
+     * Creates new JSON-RPC Client instance.
+     *
+     * @param mixed ...$args constructor arguments.
+     * @return static new instance.
+     */
+    public static function new(...$args): self
+    {
+        return new static(...$args);
     }
 }
