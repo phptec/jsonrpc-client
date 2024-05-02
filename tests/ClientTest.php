@@ -1,7 +1,8 @@
 <?php
 
-namespace PhpTec\JsonRpc\Test;
+namespace PhpTec\JsonRpc\Client\Test;
 
+use PhpTec\JsonRpc\Client\Authentication\BasicAuth;
 use PhpTec\JsonRpc\Client\Client;
 use PHPUnit\Framework\TestCase;
 
@@ -74,5 +75,16 @@ class ClientTest extends TestCase
         $httpStreamFactory = $client->getHttpStreamFactory();
 
         $this->assertTrue($httpStreamFactory instanceof \Psr\Http\Message\StreamFactoryInterface);
+    }
+
+    public function testSetupAuthentication(): void
+    {
+        $client = new Client('http://example.com/json-rpc');
+
+        $authentication = new BasicAuth('test', 'secret');
+
+        $client->setAuthentication($authentication);
+
+        $this->assertSame($authentication, $client->getAuthentication());
     }
 }

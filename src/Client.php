@@ -28,6 +28,11 @@ class Client
     private $httpStreamFactory;
 
     /**
+     * @var \PhpTec\JsonRpc\Client\AuthenticationContract|null authentication for JSON-RPC request.
+     */
+    private $authentication;
+
+    /**
      * @var string JSON-RPC API endpoint URI.
      */
     private $endpointUri;
@@ -193,6 +198,29 @@ class Client
         return new \GuzzleHttp\Psr7\HttpFactory();
     }
 
+    /**
+     * Sets request authentication strategy.
+     *
+     * @param \PhpTec\JsonRpc\Client\AuthenticationContract|null $authentication request authentication strategy.
+     * @return static self reference.
+     */
+    public function setAuthentication(?AuthenticationContract $authentication): self
+    {
+        $this->authentication = $authentication;
+
+        return $this;
+    }
+
+    /**
+     * Returns currently used request authentication strategy.
+     *
+     * @return \PhpTec\JsonRpc\Client\AuthenticationContract|null request authentication strategy.
+     */
+    public function getAuthentication(): ?AuthenticationContract
+    {
+        return $this->authentication;
+    }
+
     protected function sendHttpRequest(array $requestData): array
     {
         $json = $this->jsonEncode($requestData);
@@ -202,6 +230,10 @@ class Client
             ->createRequest('POST', $this->endpointUri)
             ->withHeader('Content-Type', 'application/json')
             ->withBody($body);
+
+        if (($authentication = $this->getAuthentication()) !== null) {
+            $httpRequest = $authentication->authenticate($httpRequest);
+        }
 
         $httpResponse = $this->getHttpClient()->sendRequest($httpRequest);
 

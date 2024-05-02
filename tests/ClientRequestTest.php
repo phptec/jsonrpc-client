@@ -1,8 +1,9 @@
 <?php
 
-namespace PhpTec\JsonRpc\Test;
+namespace PhpTec\JsonRpc\Client\Test;
 
 use GuzzleHttp\Psr7\Response;
+use PhpTec\JsonRpc\Client\Authentication\Header;
 use PhpTec\JsonRpc\Client\Client;
 use PhpTec\JsonRpc\Client\Rpc;
 use PHPUnit\Framework\TestCase;
@@ -204,5 +205,25 @@ PHP
 
         $this->assertSame('foo', $bodyJson['method']);
         $this->assertEquals(['name' => 'bar'], $bodyJson['params']);
+    }
+
+    /**
+     * @depends testInvoke
+     */
+    public function testAuthenticate(): void
+    {
+        $httpResponse = new Response(200, [], '{"jsonrpc":"2.0","result":"success"}');
+
+        $this->httpClient->addResponse($httpResponse);
+
+        $this->rpcClient->setAuthentication(new Header('X-Auth', 'Secret'));
+
+        $result = $this->rpcClient->invoke('foo', ['name' => 'bar']);
+
+        $this->assertSame('success', $result);
+
+        $lastRequest = $this->httpClient->getLastRequest();
+
+        $this->assertSame('Secret', $lastRequest->getHeaderLine('X-Auth'));
     }
 }
