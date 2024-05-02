@@ -190,7 +190,12 @@ class ClientRequestTest extends TestCase
 
         $this->httpClient->addResponse($httpResponse);
 
-        $result = $this->rpcClient->foo(name: 'bar');
+        // avoid parse error on PHP < 8.0
+        eval(
+<<<'PHP'
+$result = $this->rpcClient->foo(name: 'bar');
+PHP
+        );
 
         $this->assertSame('success', $result);
 
