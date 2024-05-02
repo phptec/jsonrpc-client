@@ -441,7 +441,11 @@ class Client
         $httpRequest = $this->createHttpRequest($requestData);
 
         try {
+            $beginTime = microtime(true);
+
             $httpResponse = $this->getHttpClient()->sendRequest($httpRequest);
+
+            $endTime = microtime(true);
 
             $responseData = $this->jsonDecode($httpResponse->getBody()->__toString());
         } catch (\Exception $exception) {
@@ -461,6 +465,7 @@ class Client
                 'uri' => $this->endpointUri,
                 'request' => $requestData,
                 'response' => $responseData,
+                'time' => $endTime - $beginTime,
             ]);
         }
 
