@@ -182,7 +182,7 @@ class ClientRequestTest extends TestCase
      */
     public function testMagicCallNamedArguments(): void
     {
-        if (version_compare(PHP_VERSION_ID, '8.0.0', '<')) {
+        if (version_compare(PHP_VERSION, '8.0.0', '<')) {
             $this->markTestSkipped('PHP version >= 8.0.0 required.');
         }
 
