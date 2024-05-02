@@ -18,7 +18,7 @@ For license information check the [LICENSE](LICENSE.md)-file.
 Installation
 ------------
 
-The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
+The preferred way to install this package is through [composer](http://getcomposer.org/download/).
 
 Either run
 
@@ -35,7 +35,7 @@ or add
 to the "require" section of your composer.json.
 
 
-Usage
------
+Documentation
+-------------
 
-This package provides a [JSON-RPC](https://www.jsonrpc.org/specification) Client for PHP.
+Documentation is at [docs/README.md](docs/README.md).
