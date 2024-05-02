@@ -4,6 +4,7 @@ namespace PhpTec\JsonRpc\Client\Test;
 
 use PhpTec\JsonRpc\Client\Authentication\BasicAuth;
 use PhpTec\JsonRpc\Client\Client;
+use PhpTec\JsonRpc\Client\Test\Support\Logger;
 use PHPUnit\Framework\TestCase;
 
 class ClientTest extends TestCase
@@ -86,5 +87,16 @@ class ClientTest extends TestCase
         $client->setAuthentication($authentication);
 
         $this->assertSame($authentication, $client->getAuthentication());
+    }
+
+    public function testSetupLogger(): void
+    {
+        $client = new Client('http://example.com/json-rpc');
+
+        $logger = new Logger();
+
+        $client->setLogger($logger);
+
+        $this->assertSame($logger, $client->getLogger());
     }
 }

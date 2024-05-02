@@ -4,7 +4,9 @@ namespace PhpTec\JsonRpc\Client;
 
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * @author Paul Klimov <klimov.paul@gmail.com>
@@ -31,6 +33,12 @@ class Client
      * @var \PhpTec\JsonRpc\Client\AuthenticationContract|null authentication for JSON-RPC request.
      */
     private $authentication;
+
+    /**
+     * @var \Psr\Log\LoggerInterface|null logger for JSON-RPC request debug (trace).
+     * If not set - logging is disabled.
+     */
+    private $logger;
 
     /**
      * @var string JSON-RPC API endpoint URI.
@@ -221,7 +229,36 @@ class Client
         return $this->authentication;
     }
 
-    protected function sendHttpRequest(array $requestData): array
+    /**
+     * Sets the logger for the JSON-RPC request debug (trace).
+     *
+     * @param \Psr\Log\LoggerInterface|null $logger logger instance, if `null` given - logging will be disabled.
+     * @return static self reference.
+     */
+    public function setLogger(?LoggerInterface $logger): self
+    {
+        $this->logger = $logger;
+
+        return $this;
+    }
+
+    /**
+     * Returns the logger for JSON-RPC request debug (trace).
+     *
+     * @return \Psr\Log\LoggerInterface|null logger instance, `null` means logging is disabled.
+     */
+    public function getLogger(): ?LoggerInterface
+    {
+        return $this->logger;
+    }
+
+    /**
+     * Creates new HTTP request with given data.
+     *
+     * @param array $requestData request data.
+     * @return \Psr\Http\Message\RequestInterface HTTP request instance.
+     */
+    protected function createHttpRequest(array $requestData): RequestInterface
     {
         $json = $this->jsonEncode($requestData);
         $body = $this->getHttpStreamFactory()->createStream($json);
@@ -235,9 +272,41 @@ class Client
             $httpRequest = $authentication->authenticate($httpRequest);
         }
 
-        $httpResponse = $this->getHttpClient()->sendRequest($httpRequest);
+        return $httpRequest;
+    }
 
-        $responseData = $this->jsonDecode($httpResponse->getBody()->__toString());
+    /**
+     * Sends the HTTP request with given data.
+     *
+     * @param array $requestData request data.
+     * @return array response decoded data.
+     * @throws \Psr\Http\Client\ClientExceptionInterface HTTP transfer exception.
+     */
+    protected function sendHttpRequest(array $requestData): array
+    {
+        $httpRequest = $this->createHttpRequest($requestData);
+
+        try {
+            $httpResponse = $this->getHttpClient()->sendRequest($httpRequest);
+
+            $responseData = $this->jsonDecode($httpResponse->getBody()->__toString());
+        } catch (\Exception $exception) {
+            if (($logger = $this->getLogger()) !== null) {
+                $logger->error($exception->getMessage(), [
+                    'exception' => $exception,
+                    'request' => $requestData,
+                ]);
+            }
+
+            throw $exception;
+        }
+
+        if (($logger = $this->getLogger()) !== null) {
+            $logger->debug('JSON-RPC Client Request', [
+                'request' => $requestData,
+                'response' => $responseData,
+            ]);
+        }
 
         return $responseData;
     }

@@ -6,6 +6,7 @@ use GuzzleHttp\Psr7\Response;
 use PhpTec\JsonRpc\Client\Authentication\Header;
 use PhpTec\JsonRpc\Client\Client;
 use PhpTec\JsonRpc\Client\Rpc;
+use PhpTec\JsonRpc\Client\Test\Support\Logger;
 use PHPUnit\Framework\TestCase;
 
 class ClientRequestTest extends TestCase
@@ -225,5 +226,27 @@ PHP
         $lastRequest = $this->httpClient->getLastRequest();
 
         $this->assertSame('Secret', $lastRequest->getHeaderLine('X-Auth'));
+    }
+
+    /**
+     * @depends testInvoke
+     */
+    public function testLogging(): void
+    {
+        $httpResponse = new Response(200, [], '{"jsonrpc":"2.0","result":"success"}');
+
+        $this->httpClient->addResponse($httpResponse);
+
+        $logger = new Logger();
+
+        $this->rpcClient->setLogger($logger);
+
+        $result = $this->rpcClient->invoke('foo', ['name' => 'bar']);
+
+        $this->assertSame('success', $result);
+
+        $this->assertNotEmpty($logger->logs);
+        $this->assertSame('foo', $logger->logs[0]['context']['request']['method']);
+        $this->assertSame('success', $logger->logs[0]['context']['response']['result']);
     }
 }
