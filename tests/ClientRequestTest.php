@@ -182,6 +182,26 @@ class ClientRequestTest extends TestCase
     /**
      * @depends testMagicCall
      */
+    public function testMagicCallEnumerableArgs(): void
+    {
+        $httpResponse = new Response(200, [], '{"jsonrpc":"2.0","result":6}');
+
+        $this->httpClient->addResponse($httpResponse);
+
+        $result = $this->rpcClient->sum(1, 2, 3);
+
+        $this->assertSame(6, $result);
+
+        $lastRequest = $this->httpClient->getLastRequest();
+        $bodyJson = json_decode($lastRequest->getBody()->__toString(), true);
+
+        $this->assertSame('sum', $bodyJson['method']);
+        $this->assertEquals([1, 2, 3], $bodyJson['params']);
+    }
+
+    /**
+     * @depends testMagicCall
+     */
     public function testMagicCallNamedArguments(): void
     {
         if (version_compare(PHP_VERSION, '8.0.0', '<')) {

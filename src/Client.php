@@ -564,19 +564,21 @@ class Client
     public function __call(string $method, array $arguments)
     {
         $params = [];
-        $id = null;
         if (!empty($arguments)) {
             if (isset($arguments[0])) {
                 // traditional arguments
-                $params = $arguments[0];
-                $id = $arguments[1] ?? null;
+                if (count($arguments) > 1 || !is_array($arguments[0])) {
+                    $params = $arguments;
+                } else {
+                    $params = $arguments[0];
+                }
             } else {
                 // named arguments, require PHP >= 8.0
                 $params = $arguments;
             }
         }
 
-        return $this->invoke($method, $params, $id);
+        return $this->invoke($method, $params);
     }
 
     /**
