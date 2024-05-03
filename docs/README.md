@@ -23,5 +23,5 @@ Basic Usage
 Advanced Usage
 --------------
 
-* [Branching Clients](advanced-branching-clients.md)
 * [Dedicated Clients](advanced-dedicated-clients.md)
+* [Branching Clients](advanced-branching-clients.md)
