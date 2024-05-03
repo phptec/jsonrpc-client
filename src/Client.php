@@ -9,6 +9,24 @@ use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 
 /**
+ * Client represents a JSON-RPC client.
+ *
+ * Usage example:
+ *
+ * ```php
+ * $jsonRpcClient = Client::new('https://example.test/json-rpc')
+ *     ->setAuthentication(new BasicAuth('apiuser', 'secret'))
+ *     ->setHttpClient(new \GuzzleHttp\Client([
+ *         'timeout' => 15,
+ *     ]));
+ *
+ * $result = $jsonRpcClient->invoke('subtract', [42, 23]);
+ * $result = $jsonRpcClient->invoke('pow', [
+ *     'number' => $number,
+ *     'exponent' => $exponent,
+ * ]);
+ * ```
+ *
  * @author Paul Klimov <klimov.paul@gmail.com>
  * @since 1.0
  */
@@ -81,7 +99,7 @@ class Client
      * Invokes the remote method, returning its execution result.
      *
      * @param string $name remote method (procedure) name.
-     * @param array<string, mixed> remote method (procedure) parameters (arguments).
+     * @param array<string|int, mixed> remote method (procedure) parameters (arguments).
      * @param int|string|null request ID.
      * @return mixed the invocation result.
      */
@@ -194,6 +212,10 @@ class Client
         return new \GuzzleHttp\Client([]);
     }
 
+    /**
+     * @param \Psr\Http\Message\RequestFactoryInterface $httpRequestFactory HTTP request factory.
+     * @return static self reference.
+     */
     public function setHttpRequestFactory(RequestFactoryInterface $httpRequestFactory): self
     {
         $this->httpRequestFactory = $httpRequestFactory;
@@ -201,6 +223,9 @@ class Client
         return $this;
     }
 
+    /**
+     * @return \Psr\Http\Message\RequestFactoryInterface HTTP request factory.
+     */
     public function getHttpRequestFactory(): RequestFactoryInterface
     {
         if ($this->httpRequestFactory === null) {
@@ -210,11 +235,20 @@ class Client
         return $this->httpRequestFactory;
     }
 
+    /**
+     * Creates default instance for the HTTP request factory.
+     *
+     * @return \Psr\Http\Message\RequestFactoryInterface HTTP request factory.
+     */
     protected function defaultHttpRequestFactory(): RequestFactoryInterface
     {
         return new \GuzzleHttp\Psr7\HttpFactory();
     }
 
+    /**
+     * @param \Psr\Http\Message\StreamFactoryInterface $httpStreamFactory HTTP stream factory.
+     * @return static self reference.
+     */
     public function setHttpStreamFactory(StreamFactoryInterface $httpStreamFactory): self
     {
         $this->httpStreamFactory = $httpStreamFactory;
@@ -222,6 +256,9 @@ class Client
         return $this;
     }
 
+    /**
+     * @return \Psr\Http\Message\StreamFactoryInterface HTTP stream factory.
+     */
     public function getHttpStreamFactory(): StreamFactoryInterface
     {
         if ($this->httpStreamFactory === null) {
@@ -231,6 +268,11 @@ class Client
         return $this->httpStreamFactory;
     }
 
+    /**
+     * Creates default instance for the HTTP stream factory.
+     *
+     * @return \Psr\Http\Message\StreamFactoryInterface HTTP stream factory.
+     */
     protected function defaultHttpStreamFactory(): StreamFactoryInterface
     {
         return new \GuzzleHttp\Psr7\HttpFactory();

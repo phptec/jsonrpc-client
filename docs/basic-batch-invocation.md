@@ -24,7 +24,7 @@ var_dump($results); // outputs: `array('first' => 19, 'second' => 5, 'third' => 
 /* JSON behind the scenes:
 --> [
     {"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": "first"},
-    {"jsonrpc": "2.0", "method": "subtract", "params": ["minuend": 42, "subtrahend": 23], "id": "second"},
+    {"jsonrpc": "2.0", "method": "subtract", "params": {"minuend": 42, "subtrahend": 23}, "id": "second"},
     {"jsonrpc": "2.0", "method": "third", "params": [12, 14], "id": "third"}
 ]
 <-- [

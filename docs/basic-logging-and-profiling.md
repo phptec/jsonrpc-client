@@ -3,7 +3,7 @@ Logging and Profiling
 
 This package supports [PSR-3 compatible logger](https://www.php-fig.org/psr/psr-3/) for logging remote methods requests.
 Use `setLogger()` method to configure logger for the JSON-RPC client. For example: if you are using [monolog/monolog](https://packagist.org/packages/monolog/monolog)
-package your code may look like following:
+package, your code may look like following:
 
 ```php
 <?php

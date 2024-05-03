@@ -16,7 +16,7 @@ class Rpc
     private $method;
 
     /**
-     * @var array<string, mixed> remote method (procedure) parameters (arguments).
+     * @var array<string|int, mixed> remote method (procedure) parameters (arguments).
      */
     private $params = [];
 
@@ -52,7 +52,7 @@ class Rpc
     }
 
     /**
-     * @return array<string, mixed> remote method (procedure) parameters (arguments).
+     * @return array<string|int, mixed> remote method (procedure) parameters (arguments).
      */
     public function getParams(): array
     {
@@ -60,7 +60,7 @@ class Rpc
     }
 
     /**
-     * @param array<string, mixed> remote method (procedure) parameters (arguments).
+     * @param array<string|int, mixed> remote method (procedure) parameters (arguments).
      * @return static self reference.
      */
     public function setParams(array $params): self
