@@ -54,3 +54,18 @@ use PhpTec\JsonRpc\Client\Client;
 
 $jsonRpcClient = new Client('https://example.test/json-rpc');
 ```
+
+If you need to specify custom HTTP request options, you'll have to create and set HTTP client manually.
+For example:
+
+```php
+<?php
+
+use PhpTec\JsonRpc\Client\Client;
+
+$jsonRpcClient = Client::new('https://example.test/json-rpc')
+    ->setHttpClient(new \GuzzleHttp\Client([
+        'allow_redirects' => true,
+        'timeout' => 15,
+    ]));
+```
