@@ -489,6 +489,17 @@ class Client
 
             $endTime = microtime(true);
 
+            $statusCode = $httpResponse->getStatusCode();
+            if ($statusCode < 200 || $statusCode > 299) {
+                $errorBody = strip_tags($httpResponse->getBody()->getContents());
+                $bodyLimit = 255;
+                if (strlen($errorBody) > $bodyLimit) {
+                    $errorBody = substr($errorBody, 0, $bodyLimit) . '...';
+                }
+
+                throw new \RuntimeException("{$statusCode} {$httpResponse->getReasonPhrase()}: {$errorBody}", $statusCode);
+            }
+
             $responseData = $this->jsonDecode($httpResponse->getBody()->__toString());
         } catch (\Exception $exception) {
             if (($logger = $this->getLogger()) !== null) {

@@ -291,4 +291,20 @@ PHP
 
         $this->assertSame('prefix.foo', $bodyJson['method']);
     }
+
+    public function testHttpError(): void
+    {
+        $httpResponse = new Response(500, [], '<h1>Test Error Message</h1>');
+
+        $this->httpClient->addResponse($httpResponse);
+
+        try {
+            $result = $this->rpcClient->invoke('foo', ['name' => 'bar']);
+        } catch (\Exception $exception) {}
+
+        $this->assertTrue(isset($exception));
+
+        $this->assertSame(500, $exception->getCode());
+        $this->assertSame('500 Internal Server Error: Test Error Message', $exception->getMessage());
+    }
 }
