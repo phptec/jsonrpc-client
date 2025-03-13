@@ -1,8 +1,8 @@
 PHP JSON-RPC Client
 ===================
 
-1.0.2 Under Development
------------------------
+1.0.2, March 13, 2025
+---------------------
 
 - Enh: Added ability to duplicate RPC method name in HTTP request query string for debug purposes (klimov-paul)
 
