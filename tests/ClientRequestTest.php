@@ -307,4 +307,56 @@ PHP
         $this->assertSame(500, $exception->getCode());
         $this->assertSame('500 Internal Server Error: Test Error Message', $exception->getMessage());
     }
+
+    /**
+     * @depends testInvoke
+     */
+    public function testMethodQueryParam(): void
+    {
+        $httpResponse = new Response(200, [], '{"jsonrpc":"2.0","result":"success"}');
+
+        $this->httpClient->addResponse($httpResponse);
+
+        $this->rpcClient->setMethodQueryParam('rpc');
+
+        $result = $this->rpcClient->invoke('foo', ['name' => 'bar']);
+
+        $this->assertSame('success', $result);
+
+        $lastRequest = $this->httpClient->getLastRequest();
+
+        $this->assertSame('rpc=foo', $lastRequest->getUri()->getQuery());
+    }
+
+    /**
+     * @depends testMethodQueryParam
+     * @depends testInvokeRpcBatch
+     */
+    public function testMethodQueryParamWithBatchRequest(): void
+    {
+        $httpResponse = new Response(200, [], json_encode([
+            [
+                'jsonrpc' => '2.0',
+                'id' => 'bar',
+                'result' => 'success-bar',
+            ],
+            [
+                'jsonrpc' => '2.0',
+                'id' => 'foo',
+                'result' => 'success-foo',
+            ],
+        ]));
+        $this->httpClient->addResponse($httpResponse);
+
+        $this->rpcClient->setMethodQueryParam('rpc');
+
+        $results = $this->rpcClient->invokeBatch([
+            'foo' => new Rpc('method-foo', ['name' => 'foo']),
+            'bar' => new Rpc('method-bar', ['name' => 'bar']),
+        ]);
+
+        $lastRequest = $this->httpClient->getLastRequest();
+
+        $this->assertSame('rpc%5Bfoo%5D=method-foo&rpc%5Bbar%5D=method-bar', $lastRequest->getUri()->getQuery());
+    }
 }

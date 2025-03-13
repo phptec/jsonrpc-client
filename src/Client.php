@@ -86,6 +86,13 @@ class Client
     private $jsonDecodeOptions = 0;
 
     /**
+     * @var string name of the query string (GET) parameter, which should be used to duplicate RPC method name.
+     *
+     * @since 1.0.2
+     */
+    private $methodQueryParam = '';
+
+    /**
      * Constructor.
      *
      * @param string $endpointUri JSON-RPC API endpoint URI.
@@ -445,6 +452,43 @@ class Client
     }
 
     /**
+     * Sets the name of the query string (GET) parameter, which should be used to duplicate RPC method name
+     * in the outgoing HTTP request.
+     *
+     * With such parameter set the actual request URI will look like:
+     *
+     * ```
+     * https://example.test/json-rpc?rpc=rpc_method_name
+     * ```
+     *
+     * This could be useful for debug purposes, allowing RPC method name to appear at web server access logs.
+     *
+     * @since 1.0.2
+     *
+     * @param string $methodQueryParam query param name.
+     * @return static self reference.
+     */
+    public function setMethodQueryParam(string $methodQueryParam): self
+    {
+        $this->methodQueryParam = $methodQueryParam;
+
+        return $this;
+    }
+
+    /**
+     * Returns the name of the query string (GET) parameter, which should be used to duplicate RPC method name
+     * in the outgoing HTTP request.
+     *
+     * @since 1.0.2
+     *
+     * @return string query param name.
+     */
+    public function getMethodQueryParam(): string
+    {
+        return $this->methodQueryParam;
+    }
+
+    /**
      * Creates new HTTP request with given data.
      *
      * @param array $requestData request data.
@@ -481,6 +525,16 @@ class Client
     protected function sendHttpRequest(array $requestData): array
     {
         $httpRequest = $this->createHttpRequest($requestData);
+
+        $methodQueryParam = $this->getMethodQueryParam();
+        if (!empty($methodQueryParam)) {
+            $httpRequest = $this->addRequestQueryParams(
+                $httpRequest,
+                [
+                    $methodQueryParam => $this->extractMethodNames($requestData),
+                ]
+            );
+        }
 
         try {
             $beginTime = microtime(true);
@@ -562,6 +616,45 @@ class Client
         }
 
         return $result;
+    }
+
+    /**
+     * @param array $requestData raw RPC request data.
+     * @return string[]|string RPC method name or array of names.
+     */
+    private function extractMethodNames(array $requestData)
+    {
+        if (isset($requestData['method'])) {
+            return $requestData['method'];
+        }
+
+        return array_column($requestData, 'method', 'id');
+    }
+
+    /**
+     * @param \Psr\Http\Message\RequestInterface $request raw HTTP request.
+     * @param array $queryParams query params, which should be added to request.
+     * @return \Psr\Http\Message\RequestInterface adjusted HTTP request.
+     */
+    private function addRequestQueryParams(RequestInterface $request, array $queryParams): RequestInterface
+    {
+        if (empty($queryParams)) {
+            return $request;
+        }
+
+        $uri = $request->getUri();
+        $query = $uri->getQuery();
+        $params = [];
+
+        parse_str($query, $params);
+
+        $params = array_merge($params, $queryParams);
+
+        $query = http_build_query($params, '', '&');
+
+        $uri = $uri->withQuery($query);
+
+        return $request->withUri($uri);
     }
 
     /**
