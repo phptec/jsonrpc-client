@@ -90,7 +90,7 @@ class Client
      *
      * @since 1.0.2
      */
-    private $methodQueryParam = '';
+    private $debugMethodQueryParam = '';
 
     /**
      * Constructor.
@@ -463,14 +463,14 @@ class Client
      *
      * This could be useful for debug purposes, allowing RPC method name to appear at web server access logs.
      *
-     * @since 1.0.2
-     *
-     * @param string $methodQueryParam query param name.
+     * @param string $debugMethodQueryParam query param name.
      * @return static self reference.
+     *@since 1.0.2
+     *
      */
-    public function setMethodQueryParam(string $methodQueryParam): self
+    public function setDebugMethodQueryParam(string $debugMethodQueryParam): self
     {
-        $this->methodQueryParam = $methodQueryParam;
+        $this->debugMethodQueryParam = $debugMethodQueryParam;
 
         return $this;
     }
@@ -483,9 +483,9 @@ class Client
      *
      * @return string query param name.
      */
-    public function getMethodQueryParam(): string
+    public function getDebugMethodQueryParam(): string
     {
-        return $this->methodQueryParam;
+        return $this->debugMethodQueryParam;
     }
 
     /**
@@ -526,7 +526,7 @@ class Client
     {
         $httpRequest = $this->createHttpRequest($requestData);
 
-        $methodQueryParam = $this->getMethodQueryParam();
+        $methodQueryParam = $this->getDebugMethodQueryParam();
         if (!empty($methodQueryParam)) {
             $httpRequest = $this->addRequestQueryParams(
                 $httpRequest,

@@ -311,13 +311,13 @@ PHP
     /**
      * @depends testInvoke
      */
-    public function testMethodQueryParam(): void
+    public function testDebugMethodQueryParam(): void
     {
         $httpResponse = new Response(200, [], '{"jsonrpc":"2.0","result":"success"}');
 
         $this->httpClient->addResponse($httpResponse);
 
-        $this->rpcClient->setMethodQueryParam('rpc');
+        $this->rpcClient->setDebugMethodQueryParam('rpc');
 
         $result = $this->rpcClient->invoke('foo', ['name' => 'bar']);
 
@@ -329,10 +329,10 @@ PHP
     }
 
     /**
-     * @depends testMethodQueryParam
+     * @depends testDebugMethodQueryParam
      * @depends testInvokeRpcBatch
      */
-    public function testMethodQueryParamWithBatchRequest(): void
+    public function testDebugMethodQueryParamWithBatchRequest(): void
     {
         $httpResponse = new Response(200, [], json_encode([
             [
@@ -348,7 +348,7 @@ PHP
         ]));
         $this->httpClient->addResponse($httpResponse);
 
-        $this->rpcClient->setMethodQueryParam('rpc');
+        $this->rpcClient->setDebugMethodQueryParam('rpc');
 
         $results = $this->rpcClient->invokeBatch([
             'foo' => new Rpc('method-foo', ['name' => 'foo']),
