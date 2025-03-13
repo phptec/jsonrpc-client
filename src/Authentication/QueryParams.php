@@ -8,6 +8,9 @@ use Psr\Http\Message\RequestInterface;
 /**
  * QueryParams authenticates JSON-RPC request by adding specified parameters to its query string.
  *
+ * > Note: this authentication method is considered to be unsafe since it will cause credentials
+ *   to appear at HTTP logs along with full URL. Use this method only, if there is no alternative.
+ *
  * @author Paul Klimov <klimov.paul@gmail.com>
  * @since 1.0
  */
